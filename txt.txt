@@ -1,0 +1,17 @@
+
+ferramentas de dev
+
+i de instalar
+-D ferramentas de desenvolvimento
+typescript
+ts-node
+prisma
+
+
+/inicialar ts no projeto{
+
+    npx tsc --init
+
+    typescript compaile
+}
+ 
