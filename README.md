@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # API de Clientes
 
 API REST para gerenciamento de clientes usando Node.js, Express e Prisma com MariaDB.
