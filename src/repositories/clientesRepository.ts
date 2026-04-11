@@ -11,7 +11,7 @@ import { PrismaClient } from "@prisma/client";
 
 /*
     new PrismaMariaDb() é criado um client completo de acesso ao banco
-    URL serve só pra conexão (host, usuário, senha, banco, etc.)
+    url serve só pra conexão (host, usuário, senha, banco, etc.)
 
     A DATABASE_URL fornece os dados de conexão (host, usuário, senha, banco), e o Prisma Client usa essas informações para se conectar ao banco.
     A estrutura do client (métodos, models, etc.) vem do schema.prisma.
@@ -22,18 +22,43 @@ const prisma = new PrismaClient({ adapter });
 
 
 // Buscar varios registros
-export function getClientes() {
-    return prisma.clientes.findMany();
+export async function getClientes() {
+    try {
+        //se nao encontrar valor da tabela, retorna vazio
+        return await prisma.clientes.findMany();
+    }
+    catch (error) {
+        //erro na busca com o banco
+        throw error;
+    };
 };
+
+
 // Buscar somente 1 registro
-export function getCliente(id: number) {
-    return prisma.clientes.findUnique({
-        where: { ID: id }
-    });
+export async function getCliente(id: number) {
+    //consultando
+    try {
+        const resultado = await prisma.clientes.findUnique({
+            where: { ID: id }
+        });
+
+        //se nao existir registro com id
+        if (!resultado) {
+            return null
+        };
+
+        //se existir
+        return resultado;
+    }
+    catch (error) {
+        throw error;
+    };
 };
 
 
 //  Atualizar
+//type = criar um model
+//Molde de um objeto que será usado como parâmetro
 type atualizar = {
     Nome?: string;
     Idade?: number;
@@ -41,59 +66,73 @@ type atualizar = {
 };
 //  Se usar a tipagem criada pelo prisma, tera que obeceder os campos gerados pelo model
 export async function UpdateCliente(id: number, novoDado: atualizar) {
-    //consultando se existe o registro com o id
-    const clienteExiste = await prisma.clientes.findUnique({
-        where: { ID: id }
-    });
+    try {
+        //consultando se existe o registro com o id, se nao encontrar retorna null
+        const clienteExiste = await prisma.clientes.findUnique({
+            where: { ID: id }
+        });
 
-    //PREVENÇÃO DE ERRO
-    //se nao existir retorna null, nao quebra o codigo
-    if (!clienteExiste) {
-        return null;
+        //PREVENÇÃO DE ERRO
+        //se nao existir o id na tabela retorna null, nao quebra o codigo
+        if (clienteExiste == null) {
+            return null;
+        };
+
+        //se existir
+        return await prisma.clientes.update({
+            where: { ID: id },
+            data: novoDado
+        });
+    } catch (error) {
+        throw error;
     };
-
-    //se existir
-    return await prisma.clientes.update({
-        where: { ID: id },
-        data: novoDado
-    });
 };
 
 
 // Criar novo registro
+//Molde de um objeto que será usado como parâmetro
 type Cliente = {
     Nome: string;
     Idade: number;
     UF: string;
 };
-export function addCliente(newCustomer: Cliente) {
-    return prisma.clientes.create({
-        data: newCustomer
-    });
-}
+export async function addCliente(newCustomer: Cliente) {
+    try {
+        //create do prisma nunca retorna null
+        const consulta = await prisma.clientes.create({
+            data: newCustomer
+        });
+
+        //sucesso
+        return consulta;
+    }
+    catch (error) {
+        // falha ao inserir dados (validação, conexão ou constraint(restrição/regra))
+        throw error;
+    };
+};
 
 
 // Deletar registro
 export async function deleteCliente(id: number) {
     //verificando se id existe
-    const clienteExiste = await prisma.clientes.findUnique({
-        where: { ID: id }
-    })
+    try {
+        const clienteExiste = await prisma.clientes.findUnique({
+            where: { ID: id }
+        })
 
-    //PREVENÇÃO DE ERRO
-    //se nao existir rretorna null, nao quebra o codigo
-    if (!clienteExiste) {
-        return null;
+        //PREVENÇÃO DE ERRO
+        //se nao existir registro findUnique retorna null, if nao quebra o codigo
+        if (clienteExiste === null) {
+            return null;
+        };
+
+        //se existir
+        return await prisma.clientes.delete({
+            where: { ID: id }
+        });
+    }
+    catch (error) {
+        throw error;
     };
-
-    //se existir
-    return await prisma.clientes.delete({
-        where: { ID: id }
-    });
 };
-
-
-
-// Se precisar fechar a conexao com banco de dados
-export {prisma};
-
